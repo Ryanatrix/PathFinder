@@ -1,6 +1,6 @@
 # Pathfinder+ : Enhanced Exploration with Intelligent Breadcrumb-Based A* Optimization
 
-## 🧭 Overview
+##  Overview
 Pathfinder+ is an intelligent rover simulation environment that demonstrates **hybrid exploration techniques** inspired by classical AI search algorithms.  
 The rover first performs **DFS-style uninformed exploration**, leaving behind *breadcrumbs* of visited nodes.  
 Later, in **Second Pass Mode**, the rover uses **A\*** search with learned heuristics and breadcrumbs to generate improved, shorter navigation routes.
@@ -15,7 +15,7 @@ The system visually simulates:
 
 ---
 
-## 🎯 Motivation
+##  Motivation
 Traditional uninformed search (DFS/BFS) is exhaustive but inefficient.  
 Pathfinder+ integrates:
 - **Exploration Memory**
@@ -26,7 +26,7 @@ Pathfinder+ integrates:
 
 ---
 
-## 📚 Literature Survey
+##  Literature Survey
 Pathfinder+ incorporates principles from:
 - Russell & Norvig — *Artificial Intelligence: A Modern Approach*
 - Classical search algorithms (DFS, BFS, UCS, A*)
@@ -36,7 +36,7 @@ Pathfinder+ incorporates principles from:
 
 ---
 
-## 🎯 Problem Statement
+##  Problem Statement
 “**How can a rover explore an unknown environment efficiently, and later optimize its path using the knowledge gained from initial exploration?**”
 
 Challenges addressed:
@@ -48,7 +48,7 @@ Challenges addressed:
 
 ---
 
-## ✨ Novelty of the Work
+##  Novelty of the Work
 - **Breadcrumb-based heuristic discovery**  
   The rover logs "key turn points" during the first pass, used later to optimize the A* heuristic.
 
@@ -64,7 +64,7 @@ Challenges addressed:
 
 ---
 
-## 🎓 CO Mapping (Course Outcomes)
+##  CO Mapping (Course Outcomes)
 - **CO1:** AI system components demonstrated (agents, sensors, environment, performance measures)  
 - **CO2:** Problem solving via search (DFS, BFS, A*, heuristics) implemented  
 - **CO3:** Constraints shown via terrain, obstacles, fog-of-war  
@@ -72,7 +72,7 @@ Challenges addressed:
 
 ---
 
-## 🛠 Methodology (Step-by-step)
+##  Methodology (Step-by-step)
 1. **Map Generation**
    - Procedural obstacles  
    - Configurable terrain  
@@ -148,7 +148,7 @@ All controls visible and interactive in the right sidebar.
 
 ---
 
-## 📊 Results
+##  Results
 - A* reduces path length versus first-pass DFS  
 - Breadcrumbs serve as learned heuristics  
 - Return-to-base is reliable and deterministic  
@@ -162,7 +162,7 @@ Example metrics (printed in console):
 
 ---
 
-## 🔮 Conclusion & Future Work
+##  Conclusion & Future Work
 Pathfinder+ demonstrates the effectiveness of combining **uninformed exploration** with **heuristic optimization**.  
 It provides a visual, intuitive understanding of how agent memory and heuristics dramatically improve performance.
 
@@ -206,7 +206,7 @@ numpy 1.26+
 Install dependencies:
 
 ```
-pip install -r requirements.txt
+pip install pygame numpy
 ```
 
 ---
