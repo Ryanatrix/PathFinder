@@ -10,9 +10,9 @@ from visualizer_sprites import Visualizer
 TerrainCell = namedtuple('TerrainCell', 'type cost visible explored has_sample')
 
 class Config:
-    def __init__(self):
-        self.map_w = 1200
-        self.map_h = 938
+    def _init_(self):
+        self.map_w = 800
+        self.map_h = 480
         self.sidebar_width = 240
         self.screen_w = self.map_w + self.sidebar_width
         self.screen_h = self.map_h
@@ -31,14 +31,14 @@ class Config:
         self.rover_energy = 1200
         self.move_cost = 1
         self.crater_cost = 100
-        self.scan_range = 6
+        self.scan_range = 1
         self.max_steps = 50000
         self.fps = 60
         self.return_threshold = 0.5
         self.sprite_scale = 2.0
 
 class MapGenerator:
-    def __init__(self, size=(938,1200), obstacles=100,
+    def _init_(self, size=(938,1200), obstacles=100,
                  number_rows=3, number_columns=3,
                  noise=(3,3), margins=(0.15,0.15),
                  obstacle_size=(1,3), seed=42):
@@ -128,7 +128,7 @@ class MapGenerator:
         return self.map.copy()
 
 class LazyGrid:
-    def __init__(self, cfg: Config, map_array: np.ndarray):
+    def _init_(self, cfg: Config, map_array: np.ndarray):
         self.cfg = cfg; self.map = map_array
         self.height, self.width = self.map.shape
         self.cells = {}; self.seed = cfg.seed
@@ -151,7 +151,7 @@ class LazyGrid:
             yield (x+dx, y+dy)
 
 class Rover:
-    def __init__(self, cfg: Config, grid: LazyGrid):
+    def _init_(self, cfg: Config, grid: LazyGrid):
         self.cfg = cfg; self.grid = grid
         cx = grid.width // 2; cy = grid.height // 2
         self.pos = (cx, cy); self.base = (cx, cy)
@@ -200,7 +200,7 @@ class Rover:
         return max(0, self.energy) / self.cfg.rover_energy
 
 class Pathfinder:
-    def __init__(self, grid): self.grid = grid
+    def _init_(self, grid): self.grid = grid
     def heuristic(self, a,b): return math.hypot(a[0]-b[0], a[1]-b[1])
     def astar(self, start, goal, known):
         self.last_expanded = 0
@@ -225,30 +225,44 @@ class Pathfinder:
             path.append(cur); cur=came_from[cur]
         path.reverse(); return path
     def bfs_frontier(self, known, start):
-        if start not in known: return None
+        if start not in known:
+            return None
+
         visited = set()
         q = deque([start])
+
+        # consistent direction bias based on rover seed
+        dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+        bias = self.grid.rng.randint(0, 4)
+        dirs = dirs[bias:] + dirs[:bias]
+
         while q:
             cur = q.popleft()
-            if cur in visited: continue
+            if cur in visited:
+                continue
             visited.add(cur)
-            for nbr in self.grid.neighbors(cur):
+
+            for dx, dy in dirs:
+                nbr = (cur[0] + dx, cur[1] + dy)
                 if nbr not in known:
                     return cur
-            for nbr in self.grid.neighbors(cur):
+
+            for dx, dy in dirs:
+                nbr = (cur[0] + dx, cur[1] + dy)
                 if nbr in known and known[nbr].explored and nbr not in visited:
                     q.append(nbr)
+
         return None
 
 class Utility:
-    def __init__(self, rover, grid, pathfinder): self.rover=rover; self.grid=grid; self.pathfinder=pathfinder
+    def _init_(self, rover, grid, pathfinder): self.rover=rover; self.grid=grid; self.pathfinder=pathfinder
     def score(self, target):
         path = self.pathfinder.astar(self.rover.pos, target, self.rover.known)
         if not path: return -math.inf
         return 1.0 / (len(path) + 1e-6)
 
 class Simulation:
-    def __init__(self):
+    def _init_(self):
         self.cfg = Config()
         gen = MapGenerator(size=self.cfg.map_size, obstacles=self.cfg.obstacles,
                            number_rows=self.cfg.number_rows, number_columns=self.cfg.number_columns,
@@ -276,7 +290,7 @@ class Simulation:
         btn_w, btn_h = 200, 34
         sx = self.cfg.map_w + 16
         sy = 20
-        labels = ["Start", "Return to Base", "Second Pass", "Recharge", "Zoom In", "Zoom Out"]
+        labels = ["Start", "First Pass", "Second Pass", "Return to Base", "Recharge", "Reset"]
         self.buttons = []
         for i, label in enumerate(labels):
             rect = pygame.Rect(sx, sy + i * (btn_h + 8), btn_w, btn_h)
@@ -300,11 +314,12 @@ class Simulation:
     def _on_button(self, label):
         if label == "Start":
             self.paused = False
+        elif label == "First Pass":
+            self.paused = False
             self.rover.second_pass = False
             self.in_first_pass = True
             self.rover.mode_trace_color = (255,255,0)
-
-            # FULL reset of exploration state
+        elif label == "Reset":
             self.first_pass_last = None
             self.first_pass_breadcrumbs = []
             self.rover.history = [self.rover.base]
@@ -360,26 +375,33 @@ class Simulation:
         crumbs = self.first_pass_breadcrumbs[:]
         if not crumbs:
             return
+
         chain = []
-        start = self.rover.base
-        for c in crumbs:
+        start = self.rover.base   # YOU START AT BASE
+
+        # Go base → first breadcrumb
+        first = crumbs[0]
+        seg = self.pathfinder.astar(start, first, self.rover.known)
+        if not seg:
+            return
+        chain.extend(seg)
+        start = first
+
+        # Go crumb[i] → crumb[i+1] using A*
+        for c in crumbs[1:]:
             seg = self.pathfinder.astar(start, c, self.rover.known)
-            if seg:
-                chain.extend(seg)
-                start = c
-            else:
-                # if a segment fails, fallback to direct astar to the final target
-                fallback = self.pathfinder.astar(self.rover.pos, self.first_pass_last, self.rover.known)
-                if fallback:
-                    chain = fallback
-                break
-        # finally add a* from last crumb to final first_pass_last if it's not the same
-        if crumbs and crumbs[-1] != self.first_pass_last:
+            if not seg:
+                return
+            chain.extend(seg)
+            start = c
+
+        # Finally go last crumb → first_pass_last
+        if self.first_pass_last is not None and start != self.first_pass_last:
             seg = self.pathfinder.astar(start, self.first_pass_last, self.rover.known)
             if seg:
                 chain.extend(seg)
-        if chain:
-            self.rover.path = chain
+
+        self.rover.path = chain
 
     def second_pass_step(self):
         if self.first_pass_last is not None:
@@ -572,7 +594,7 @@ class Simulation:
                     if event.key == pygame.K_SPACE:
                         self.paused = not self.paused
                     elif event.key == pygame.K_r:
-                        self.__init__()
+                        self._init_()
                     elif event.key == pygame.K_ESCAPE:
                         self.running=False
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button==1:
@@ -609,6 +631,6 @@ class Simulation:
         pygame.quit()
         sys.exit()
 
-if __name__ == '__main__':
+if _name_ == '_main_':
     sim = Simulation()
     sim.run()
