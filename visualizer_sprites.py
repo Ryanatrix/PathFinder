@@ -34,9 +34,9 @@ def _find_asset_file(base_dir, asset_path):
 
 
 class Drone(pg.sprite.Sprite):
-    def __init__(self, viewer, rover):
+    def _init_(self, viewer, rover):
         self.groups = viewer.all_sprites
-        pg.sprite.Sprite.__init__(self, self.groups)
+        pg.sprite.Sprite._init_(self, self.groups)
         self.viewer = viewer
         self.rover = rover
         self.image = viewer.drone_img
@@ -48,9 +48,9 @@ class Drone(pg.sprite.Sprite):
 
 
 class Base(pg.sprite.Sprite):
-    def __init__(self, viewer, rover):
+    def _init_(self, viewer, rover):
         self.groups = viewer.all_sprites
-        pg.sprite.Sprite.__init__(self, self.groups)
+        pg.sprite.Sprite._init_(self, self.groups)
         self.viewer = viewer
         self.rover = rover
         self.image = viewer.base_img
@@ -62,9 +62,9 @@ class Base(pg.sprite.Sprite):
 
 
 class Obstacle(pg.sprite.Sprite):
-    def __init__(self, viewer, x, y):
+    def _init_(self, viewer, x, y):
         self.groups = viewer.all_sprites, viewer.walls
-        pg.sprite.Sprite.__init__(self, self.groups)
+        pg.sprite.Sprite._init_(self, self.groups)
         self.viewer = viewer
         self.image = viewer.obstacle_img
         self.rect = self.image.get_rect()
@@ -73,7 +73,7 @@ class Obstacle(pg.sprite.Sprite):
 
 
 class Visualizer:
-    def __init__(self, cfg, grid, rover):
+    def _init_(self, cfg, grid, rover):
         pg.init()
         self.cfg = cfg
         self.grid = grid
@@ -96,14 +96,16 @@ class Visualizer:
 
         self.sprite_scale = float(cfg.sprite_scale)
 
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = os.path.dirname(os.path.abspath(_file_))
 
         self.drone_img_orig = self._load(_find_asset_file(base_dir, ASSETS["drone_img"]))
         self.obstacle_img_orig = self._load(_find_asset_file(base_dir, ASSETS["obstacle_img"]))
         self.bck_img_orig = self._load(_find_asset_file(base_dir, ASSETS["background_img"]),
                                        size=(self.world_w, self.world_h), alpha=False)
+        rad = self.cfg.scan_range*self.cfg.tile*2
+        sz = (int(rad),int(rad))
         self.light_mask_img = self._load(_find_asset_file(base_dir, ASSETS["light_mask"]),
-                                         size=(200, 200))
+                                         size=sz)
 
         base_raw = pg.Surface((8, 8), pg.SRCALPHA)
         pg.draw.circle(base_raw, (255, 255, 255), (4, 4), 4)
@@ -182,11 +184,18 @@ class Visualizer:
         self.zoom_at((self.world_w // 2, self.world_h // 2), factor)
 
     def reveal_visible(self):
-        if not self.light_mask_img:
+        mask = self.light_mask_img
+        if mask is None:
             return
-        m = self.light_mask_img
-        for cx, cy in self.rover.revealed_centers:
-            self.world_fog.blit(m, (cx - 100, cy - 100), special_flags=pg.BLEND_RGBA_SUB)
+        mw, mh = mask.get_size()
+        offx = mw // 2
+        offy = mh // 2
+        for (cx, cy) in self.rover.revealed_centers:
+            self.world_fog.blit(
+                mask,
+                (cx - offx, cy - offy),
+                special_flags=pg.BLEND_RGBA_SUB
+            )
 
     def draw(self):
         bx = -int(self.camera_offset[0])
