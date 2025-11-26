@@ -2,7 +2,7 @@
 
 ##  Overview
 Pathfinder+ is an intelligent rover simulation environment that demonstrates **hybrid exploration techniques** inspired by classical AI search algorithms.  
-The rover first performs **DFS-style uninformed exploration**, leaving behind *breadcrumbs* of visited nodes.  
+The rover first performs **BFS-style uninformed exploration**, leaving behind *breadcrumbs* of visited nodes.  
 Later, in **Second Pass Mode**, the rover uses **A\*** search with learned heuristics and breadcrumbs to generate improved, shorter navigation routes.
 
 The system visually simulates:
@@ -11,7 +11,7 @@ The system visually simulates:
 - Intelligent path planning
 - Breadcrumb tracking
 - Camera zoom & rover-centered navigation
-- Multiple exploration phases (DFS → A* Optimization)
+- Multiple exploration phases (BFS → A* Optimization)
 
 ---
 
@@ -53,7 +53,7 @@ Challenges addressed:
   The rover logs "key turn points" during the first pass, used later to optimize the A* heuristic.
 
 - **Dual-Phase Exploration**
-  - Phase 1: DFS-like exploration with local visibility
+  - Phase 1: BFS-like exploration with local visibility
   - Phase 2: Global optimization with A*
 
 - **Visibility-driven fog system**
@@ -83,7 +83,7 @@ Challenges addressed:
    - Limited energy  
    - Scan radius  
 
-3. **First Pass (DFS Exploration)**
+3. **First Pass (BFS Exploration)**
    - Moves greedily to unexplored frontier  
    - Records breadcrumbs at meaningful turns  
    - Tracks history for return-to-base  
@@ -107,8 +107,8 @@ Challenges addressed:
 
 ## Project Features
 
-### 🔹 Intelligent First-Pass Exploration (DFS)
-The rover explores unknown terrain using DFS-style uninformed search, dropping *breadcrumb nodes* whenever it changes direction.  
+### 🔹 Intelligent First-Pass Exploration (BFS)
+The rover explores unknown terrain using BFS-style uninformed search, dropping *breadcrumb nodes* whenever it changes direction.  
 These breadcrumbs define an efficient exploration skeleton for later optimization.
 
 ### 🔹 Breadcrumb-Driven A* Optimization (Second Pass)
@@ -121,12 +121,8 @@ When Second Pass mode is activated:
 Unknown terrain is covered by dynamic fog.  
 The rover’s sensors reveal circular visibility zones as it moves.
 
-### 🔹 Zoomable Interactive Map
-Camera can zoom **into the rover’s center**.  
-User-controlled zoom-in/out buttons allow inspection of fine path details.
-
 ### 🔹 Dual-Colored Trace System
-- Yellow trace → DFS exploration path  
+- Yellow trace → BFS exploration path  
 - Cyan trace → A* optimized path  
 
 Both provide visual differentiation between naive exploration vs. intelligent optimization.
@@ -140,16 +136,16 @@ Upon hitting energy threshold:
 ### 🔹 Smart UI Sidebar Controls
 - **Start**
 - **Return to Base**
+- **First Pass**
 - **Second Pass**
 - **Recharge**
-- **Zoom In / Zoom Out**
 
 All controls visible and interactive in the right sidebar.
 
 ---
 
 ##  Results
-- A* reduces path length versus first-pass DFS  
+- A* reduces path length versus first-pass BFS  
 - Breadcrumbs serve as learned heuristics  
 - Return-to-base is reliable and deterministic  
 - Rover path becomes significantly more efficient in second pass  
@@ -158,7 +154,7 @@ Example metrics (printed in console):
 - First-pass distance  
 - Second-pass distance  
 - Efficiency gained (%)  
-- Nodes expanded in DFS vs A*
+- Nodes expanded in BFS vs A*
 
 ---
 
@@ -222,4 +218,6 @@ python pro.py
 Rohan U Nair
 SreeHari Sathyajith
 Swarna Sri Ashwika
+
+Guided by Ms. Pooja Gowda
 
